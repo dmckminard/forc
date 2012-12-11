@@ -5,6 +5,7 @@ end module fftw3
 
 module dft
     
+    use fftw3
     implicit none
     
     private
@@ -12,45 +13,31 @@ module dft
     
     contains
     
-    function fft(in) result (out)
-        
-        use fftw3
-        
-        implicit none
-        
-        integer :: n
+    subroutine dfft(in, out, kind)
+    
+        integer(c_int) :: n
+        double precision, allocatable :: in(:), out(:)
+        integer(C_FFTW_R2R_KIND), value :: kind
         type(c_ptr) :: plan
-        double complex, allocatable :: in(:), out(:)
         
         n = size(in)
         allocate(out(n))
         
-        plan = fftw_plan_dft_1d(n, in, out, FFTW_FORWARD, FFTW_ESTIMATE)
-        call fftw_execute_dft(plan, in, out)
+        plan = fftw_plan_r2r_1d(n, in, out, kind, FFTW_ESTIMATE)
+        call dfftw_execute(plan)
         call fftw_destroy_plan(plan)
+        
+    end subroutine dfft
     
+    function fft(in) result (out)
+        double precision, allocatable :: in(:), out(:)
+        call dfft(in, out, FFTW_FORWARD)
     end function fft
     
     function ifft(in) result (out)
-        
-        use fftw3
-        
-        implicit none
-        
-        integer :: n
-        type(c_ptr) :: plan
-        double complex, allocatable :: in(:), out(:)
-        
-        n = size(in)
-        allocate(out(n))
-        
-        plan = fftw_plan_dft_1d(n, in, out, FFTW_BACKWARD, FFTW_ESTIMATE)
-        call fftw_execute_dft(plan, in, out)
-        call fftw_destroy_plan(plan)
-        
-        out = out / real(n, kind = 8)
-    
+        double precision, allocatable :: in(:), out(:)
+        call dfft(in, out, FFTW_BACKWARD)
+        out = out / real(size(out), kind = 8)
     end function ifft
-
 
 end module dft

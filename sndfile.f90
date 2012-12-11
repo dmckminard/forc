@@ -1,4 +1,4 @@
-module sndfile_wrapper
+﻿module sndfile_wrapper
   
   implicit none
   
@@ -8,11 +8,11 @@ module sndfile_wrapper
         character(c_char), intent(in) :: file_name(*)
         type(c_ptr), intent(out) :: buffer
         integer(c_int), intent(out) :: frames, sample_rate
-    end subroutine 
+    end subroutine read_wav
     subroutine free_array(data) bind(c)
         use, intrinsic :: iso_c_binding
         type(c_ptr) :: data
-    end subroutine
+    end subroutine free_array
   end interface
 
 end module

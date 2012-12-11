@@ -63,12 +63,14 @@ void read_wav(char *file_name, double **buffer, int *frames, int *sample_rate) {
 
     *sample_rate = sndInfo.samplerate;
     
+    /*
     printf("\n");
     
     for(int i = 0; i < 5; i++)
         printf("%f\n", (*buffer)[i]);
     
     printf("\n");
+    */
     
     return;
     
