@@ -9,7 +9,7 @@ program main
     integer :: frames, sample_rate, i
     type(c_ptr) :: cdata
     double precision, pointer :: fdata(:)
-    double complex, allocatable :: in(:), out(:), foo(:)
+    double precision, allocatable :: in(:), out(:), foo(:)
     character(len=*), parameter :: file_name = "l48pNorm.wav"
     
     print *, 'forc'
@@ -27,8 +27,7 @@ program main
     in = fdata
    
     out = fft(in)
-    
-    call flush 
+
     do i = 1, 5
         write ( *, * ) i, in(i)
     end do
