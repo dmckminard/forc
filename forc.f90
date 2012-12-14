@@ -2,7 +2,7 @@ program main
 
     use sndfile_wrapper
     use dft, only: fft, ifft
-    use utils, only: zeros, ones, dp
+    use utils, only: zeros, ones, dp, logspace, linspace, postpad
     use iso_c_binding, only: c_ptr, c_f_pointer, c_double_complex
 
     implicit none
@@ -13,14 +13,12 @@ program main
     real(dp), allocatable :: in(:), out(:), foo(:), h1(:), h2(:), h3(:)
     character(len=*), parameter :: file_name = "l48pNorm.wav"
 
-    h1 = ones(2)
-    h2 = zeros(3)
-    allocate(h3(5))
-
-    h3 = [h1,h2]
-
+    h1 = logspace(dble(log10(30.0)), dble(log10(200.0)),5)   
+    h2 = linspace(1.d0, 10.d0, 5) 
+    
+    call postpad(h1, 6) 
     print *, 'forc'
-    !print *, mod(7,2)
+    print *, h1
 
     call read_wav(file_name, cdata, frames, sample_rate)
 
@@ -54,4 +52,4 @@ program main
        write (*,*) i, foo(i)
     end do
 
-end
+end program

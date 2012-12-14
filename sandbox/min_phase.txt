@@ -1,0 +1,81 @@
+function y = minphase(x)
+	%
+	%   y = minphase(x)  returns the minimum phase signal derived from x.
+
+	m = size(x,2);
+	n = size(x,1);
+	odd = fix(rem(n,2));
+	wn = [ones(1,m); 2*ones((n+odd)/2-1,m) ; ones(1-rem(n,2),m); zeros((n+odd)/2-1,m)];
+	y = real(ifft(exp(fft(wn.*real(ifft(log(abs(fft(x)))))))));
+    
+function [sm] = mps(s) 
+% [sm] = mps(s) 
+% create minimum-phase spectrum sm from complex spectrum s 
+   sm = exp( fft( fold( ifft( log( clipdb(s,-100) )))));
+   
+The clipdb() function prevents the log magnitude of a signal from being too large and negative. (See §J.11 for an example usage.)
+  
+function [clipped] = clipdb(s,cutoff)
+% [clipped] = clipdb(s,cutoff)
+% Clip magnitude of s at its maximum + cutoff in dB.
+% Example: clip(s,-100) makes sure the minimum magnitude
+% of s is not more than 100dB below its maximum magnitude.
+% If s is zero, nothing is done.
+
+clipped = s;
+as = abs(s);
+mas = max(as(:));
+if mas==0, return; end
+if cutoff >= 0, return; end
+thresh = mas*10^(cutoff/20); % db to linear
+toosmall = find(as < thresh);
+clipped = s;
+clipped(toosmall) = thresh;
+
+The fold() function ``time-aliases'' the noncausal part of a function onto its causal part. 
+When applied to the inverse Fourier transform of a log-spectrum, it converts non-minimum-phase 
+zeros to minimum-phase zeros. 
+
+function [rw] = fold(r) 
+% [rw] = fold(r) 
+% Fold left wing of vector in "FFT buffer format" 
+% onto right wing 
+% J.O. Smith, 1982-2002
+  
+   [m,n] = size(r);
+   if m*n ~= m+n-1
+     error('fold.m: input must be a vector'); 
+   end
+   flipped = 0;
+   if (m > n)
+     n = m;
+     r = r.';
+     flipped = 1;
+   end
+   if n < 3, rw = r; return; 
+   elseif mod(n,2)==1, 
+       nt = (n+1)/2; 
+       rw = [ r(1), r(2:nt) + conj(r(n:-1:nt+1)), ...
+             0*ones(1,n-nt) ]; 
+   else 
+       nt = n/2; 
+       rf = [r(2:nt),0]; 
+       rf = rf + conj(r(n:-1:nt+1)); 
+       rw = [ r(1) , rf , 0*ones(1,n-nt-1) ]; 
+   end; 
+
+   if flipped
+     rw = rw.';
+   end
+   
+ def rceps(x): 
+	y = sp.real(ifft(sp.log(sp.absolute(fft(x)))))
+	n = len(x) 
+	if (n%2) == 1:
+		ym = np.hstack((y[0], 2*y[1:n/2], np.zeros(n/2-1)))
+	else:
+		ym = np.hstack((y[0], 2*y[1:n/2], y[n/2+1], np.zeros(n/2-1)))
+	ym = sp.real(ifft(sp.exp(fft(ym)))) 
+	return (y, ym)
+    
+   
