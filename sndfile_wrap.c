@@ -11,14 +11,17 @@ void free_array(int **data) {
 }
 
 void read_wav(char *file_name, double **buffer, int *frames, int *sample_rate) {	
-    
+  
+  file_name = "l48pNorm.wav";
+  
 	// Open sound file
 	SF_INFO sndInfo;
 	SNDFILE *sndFile = sf_open(file_name, SFM_READ, &sndInfo);
+  
 	if (sndFile == NULL) {
 		fprintf(stderr, "Error reading source file '%s': %s\n", file_name, sf_strerror(sndFile));
 		return;
-	}
+  }
 
 	// Check format - 16bit PCM
 	if (sndInfo.format != (SF_FORMAT_WAV | SF_FORMAT_PCM_16)) {
@@ -33,7 +36,7 @@ void read_wav(char *file_name, double **buffer, int *frames, int *sample_rate) {
 		sf_close(sndFile);
 		return;
 	}
-    
+
 	// Allocate memory
 	*buffer = (double *)malloc(sndInfo.frames * sizeof(double));
 	if (*buffer == NULL) {
@@ -41,10 +44,10 @@ void read_wav(char *file_name, double **buffer, int *frames, int *sample_rate) {
 		sf_close(sndFile);
 		return;
 	}
-
+  
 	// Load data
 	*frames = sf_readf_double(sndFile, (*buffer), sndInfo.frames);
-    
+ 
 	// Check correct number of samples loaded
 	if (*frames != sndInfo.frames) {
 		fprintf(stderr, "Did not read enough frames for source\n");
@@ -53,26 +56,17 @@ void read_wav(char *file_name, double **buffer, int *frames, int *sample_rate) {
 		return;
 	}
 
-    double size = (double)*frames/sndInfo.samplerate;
+  double size = (double)*frames/sndInfo.samplerate;
     
 	// Output Info
-	printf("Read %i frames from %s, Sample rate: %d, Length: %fs\n",
+	printf("\nRead %i frames from %s, Sample rate: %d, Length: %fs\n",
 		*frames, file_name, sndInfo.samplerate, size);
 	
 	sf_close(sndFile);
 
-    *sample_rate = sndInfo.samplerate;
+  *sample_rate = sndInfo.samplerate;
     
-    /*
-    printf("\n");
-    
-    for(int i = 0; i < 5; i++)
-        printf("%f\n", (*buffer)[i]);
-    
-    printf("\n");
-    */
-    
-    return;
+  return;
     
 }
 

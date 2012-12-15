@@ -2,54 +2,52 @@ program main
 
     use sndfile_wrapper
     use dft, only: fft, ifft
-    use utils, only: zeros, ones, dp, logspace, linspace, postpad
+    use filter, only: lfilter
+    use utils, only: zeros, ones, dp, logspace, linspace
     use iso_c_binding, only: c_ptr, c_f_pointer, c_double_complex
-
-    implicit none
-     
-    integer :: frames, sample_rate, i
-    type(c_ptr) :: cdata
-    real(dp), pointer :: fdata(:)
-    real(dp), allocatable :: in(:), out(:), foo(:), h1(:), h2(:), h3(:)
-    character(len=*), parameter :: file_name = "l48pNorm.wav"
-
-    h1 = logspace(dble(log10(30.0)), dble(log10(200.0)),5)   
-    h2 = linspace(1.d0, 10.d0, 5) 
+    use butter, only: TRbjEqFilter, kHighPass, InitFilter, CalcFilterCoeffs, process
+    use min_phase, only: mps
     
-    call postpad(h1, 6) 
-    print *, 'forc'
-    print *, h1
-
-    call read_wav(file_name, cdata, frames, sample_rate)
-
-    print *, frames
-    print *, sample_rate
-    print *
-
+    implicit none
+    
+    type(TRbjEqFilter) lRGJFilter
+     
+    integer frames, Fs, i
+    type(c_ptr) cdata
+    real(dp), pointer :: fdata(:)
+    real(dp), allocatable :: fplog(:), minphase(:)
+    real, allocatable :: output(:)
+    real(dp) :: pi = 3.1415926535
+    character(len=*), parameter :: file_name = 'l48pNorm.wav'
+      
+    call read_wav(file_name, cdata, frames, Fs)
+    
     call c_f_pointer(cdata, fdata, [frames])
     call free_array(cdata)
 
-    allocate(in(frames))
-    in = fdata
+    allocate(minphase(frames))
+    ! making the measured response minumum-phase
+    minphase = mps(fdata)
 
-    out = fft(in)
+    allocate(fplog(25))
+    fplog = [logspace(dble(log10(30.0)), dble(log10(200.0)), 13), &
+             logspace(dble(log10(250.0)),dble(log10(20000.0)), 12)];
+    
+    
+    output = real(zeros(frames))
+    output(1) = 1.d0 !target
 
-    do i = 1, 5
-        write ( *, * ) i, in(i)
-    end do
-
+    ! Bufferworth filter
+    ! make the target output a 30 Hz highpass
+    call InitFilter(lRGJFilter, real(Fs), 0)
+    call CalcFilterCoeffs(lRGJFilter, kHighPass, 30.0, 0.3, 0.0, .FALSE.)
+    call process(lRGJFilter, output, frames)
+    output = lRGJFilter%out1
+    
     print *
 
     do i = 1, 5
-       write (*, *) i, out(i)
-    end do
-
-    foo = ifft(out)
-
-    print *
-
-    do i = 1, 5
-       write (*,*) i, foo(i)
+       write (*,*), i, output(i)
     end do
 
 end program

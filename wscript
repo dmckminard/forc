@@ -10,7 +10,7 @@ out = 'build'
 
 sys_libs = ['sndfile', 'fftw3']
 source_files = ['sndfile_wrap.c', 'forc.f90','sndfile.f90', 'dft.f90', 
-'utils.f90', 'min_phase.f90', 'filter.f90']
+'utils.f90', 'min_phase.f90', 'filter.f90', 'butter.f90']
 
 #Platform specific 
 if sys.platform == 'win32':

@@ -10,7 +10,7 @@ module filter
   
   function lfilter(a, b, x) result(y)
     
-    real(dp) :: a(:), b(:), x(:)
+    real(dp), allocatable, intent(in) :: a(:), b(:), x(:)
     real(dp), allocatable :: y(:)
     integer :: N,M,L,MN,lw
     
@@ -21,7 +21,7 @@ module filter
     MN = max(N,M)
     lw = MN - 1
   
-    !call postpad(b, MN)
+    call postpad(b, MN)
     
     y = zeros(L)
     
