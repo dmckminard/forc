@@ -12,6 +12,31 @@
 !*                                                               *
 !*                             F90 Release By J-P Moreau, Paris. *
 !***************************************************************** 
+!
+! Sourced from http://jean-pierre.moreau.pagesperso-orange.fr/f_signal.html
+!
+!
+!   Methods of filter:    
+!   Subroutine InitFilter(filter,SampleRate, MaxBlockSize)
+!   Subroutine SetQ(filter,NewQ)
+!   Subroutine CalcFilterCoeff(filter)
+!   Subroutine CalcFilterCoeffs(filter,pFilterType, pFreq, float pQ, pDBGain, pQIsBandWidth)
+!   Subroutine Process(filter,Input,sampleframes)
+!   real Function Process1(filter,input)
+!   
+!   *****
+!   Note:
+!   *****
+!   use Process1(input:single):single;
+!   for per sample processing
+!   use Process(Input:psingle;sampleframes:integer);
+!   for block processing. The input is a pointer to
+!   the start of an array of single which contains
+!   the audio data.
+!   i.e.
+!   RBJFilter.Process(@WaveData[0],256);
+!
+
 Module butter
 
 integer, parameter ::  &
@@ -25,8 +50,8 @@ integer, parameter ::  &
       kLowShelf=7,     &  !-LowShelf
       kHighShelf=8        !-HiShelf
 
-                                                               
-! Butterworth all-purpose filter
+                                                            
+  !Butterworth all-purpose filter
   Type TRbjEqFilter
     real b0a0,b1a0,b2a0,a1a0,a2a0
     real in1,in2,ou1,ou2
@@ -35,16 +60,7 @@ integer, parameter ::  &
     integer fFilterType
     real fFreq,fQ,fDBGain
     logical fQIsBandWidth
-
     real, pointer :: out1(:)
-
-!   Methods of filter:    
-!   Subroutine InitFilter(filter,SampleRate, MaxBlockSize)
-!   Subroutine SetQ(filter,NewQ)
-!   Subroutine CalcFilterCoeff(filter)
-!   Subroutine CalcFilterCoeffs(filter,pFilterType, pFreq, float pQ, pDBGain, pQIsBandWidth)
-!   Subroutine Process(filter,Input,sampleframes)
-!   real Function Process1(filter,input)
   End Type TRbjEqFilter
 
 contains
@@ -106,6 +122,8 @@ Subroutine CalcFilterCoeff(filter)
 
   pi = 3.1415926535
 
+  a0=0.0;a1=0.0;a2=0.0;b0=0.0;b1=0.0;b2=0.0
+  
   ! peaking, LowShelf or HiShelf
   if (filter%fFilterType>=6) then
     A = 10.0**(filter%fDBGain/40.0)
@@ -143,8 +161,8 @@ Subroutine CalcFilterCoeff(filter)
       a0=((A+1.0)-(A-1.0)*tcos+beta*tsin)
       a1=(2.0*((A-1.0)-(A+1.0)*tcos))
       a2=((A+1.0)-(A-1.0)*tcos-beta*tsin)
-	else 
-	  continue
+  else 
+    continue
     end if
   else  !other filter types
     omega=2.0*pi*filter%fFreq/filter%fSampleRate
@@ -162,7 +180,7 @@ Subroutine CalcFilterCoeff(filter)
       a0=1.0+alpha
       a1=-2.0*tcos
       a2=1.0-alpha
-	else if (filter%fFilterType==1) then !highpass
+  else if (filter%fFilterType==1) then !highpass
       b0=(1.0+tcos)/2.0
       b1=-(1.0+tcos)
       b2=(1.0+tcos)/2.0
@@ -183,22 +201,22 @@ Subroutine CalcFilterCoeff(filter)
       a0=1.0+alpha
       a1=-2.0*tcos
       a2=1.0-alpha
-	else if (filter%fFilterType==4) then !notch
+  else if (filter%fFilterType==4) then !notch
       b0=1.0
       b1=-2.0*tcos
       b2=1.0
       a0=1.0+alpha
       a1=-2.0*tcos
       a2=1.0-alpha
-	else if (filter%fFilterType==5) then !allpass
+  else if (filter%fFilterType==5) then !allpass
       b0=1.0-alpha
       b1=-2.0*tcos
       b2=1.0+alpha
       a0=1.0+alpha
       a1=-2.0*tcos
       a2=1.0-alpha
-	else 
-	  continue
+  else 
+    continue
     end if
   end if
 
@@ -220,7 +238,7 @@ real Function Process1(filter, input)
   !filter
   LastOut = (filter%b0a0)*input + (filter%b1a0)*(filter%in1) + &
             (filter%b2a0)*(filter%in2) - (filter%a1a0)*(filter%ou1) - &
-			(filter%a2a0)*(filter%ou2)
+      (filter%a2a0)*(filter%ou2)
 
   ! push in/out buffers
   filter%in2=filter%in1
@@ -234,39 +252,26 @@ real Function Process1(filter, input)
 
 End Function Process1
 
-! Note:
-!use Process1(input:single):single;
-!for per sample processing
-!use Process(Input:psingle;sampleframes:integer);
-!for block processing. The input is a pointer to
-!the start of an array of single which contains
-!the audio data.
-!i.e.
-!RBJFilter.Process(@WaveData[0],256);
-!
-
 Subroutine Process(filter, input, Sampleframes)
   type(TRbjEqFilter) filter
   real input(*)  
   integer Sampleframes, i
   real LastOut
 
-! Allocate memory for vector filter%out1
-
+  ! Allocate memory for vector filter%out1
   allocate(filter%out1(0:Sampleframes),stat=ialloc)
 
   do i=0, Sampleframes-1
     ! filter
     LastOut = filter%b0a0*(input(i)) + filter%b1a0*filter%in1 + &
-	          filter%b2a0*filter%in2 - filter%a1a0*filter%ou1 - &
-			  filter%a2a0*filter%ou2
-!   LastOut=input[i];
-!   push in/out buffers
+            filter%b2a0*filter%in2 - filter%a1a0*filter%ou1 - &
+        filter%a2a0*filter%ou2
+    ! LastOut=input[i];
+    ! push in/out buffers
     filter%in2=filter%in1
     filter%in1=input(i)
     filter%ou2=filter%ou1
     filter%ou1=LastOut
-
     filter%out1(i)=LastOut
 
   end do

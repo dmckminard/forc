@@ -17,7 +17,7 @@ program main
     real(dp), pointer :: fdata(:)
     real(dp), allocatable :: fplog(:), minphase(:)
     real, allocatable :: output(:)
-    real(dp) :: pi = 3.1415926535
+    !real(dp) :: pi = 3.1415926535
     character(len=*), parameter :: file_name = 'l48pNorm.wav'
       
     call read_wav(file_name, cdata, frames, Fs)
@@ -35,7 +35,7 @@ program main
     
     
     output = real(zeros(frames))
-    output(1) = 1.d0 !target
+    output(1) = 1.0 !target
 
     ! Bufferworth filter
     ! make the target output a 30 Hz highpass
@@ -46,7 +46,7 @@ program main
     
     print *
 
-    do i = 1, 5
+    do i = 1, 10
        write (*,*), i, output(i)
     end do
 
