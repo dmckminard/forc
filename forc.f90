@@ -3,7 +3,7 @@ program main
     use sndfile_wrapper
     use dft, only: fft, ifft
     use filter, only: lfilter
-    use utils, only: zeros, ones, dp, logspace, linspace
+    use utils, only: zeros, ones, dp, logspace, linspace, freqpoles
     use iso_c_binding, only: c_ptr, c_f_pointer, c_double_complex
     use butter, only: TRbjEqFilter, kHighPass, InitFilter, CalcFilterCoeffs, process
     use min_phase, only: mps
@@ -17,7 +17,7 @@ program main
     real(dp), pointer :: fdata(:)
     real(dp), allocatable :: fplog(:), minphase(:)
     real, allocatable :: output(:)
-    !real(dp) :: pi = 3.1415926535
+    complex*16, allocatable :: plog(:)
     character(len=*), parameter :: file_name = 'l48pNorm.wav'
       
     call read_wav(file_name, cdata, frames, Fs)
@@ -32,7 +32,7 @@ program main
     allocate(fplog(25))
     fplog = [logspace(dble(log10(30.0)), dble(log10(200.0)), 13), &
              logspace(dble(log10(250.0)),dble(log10(20000.0)), 12)];
-    
+    plog = freqpoles(fplog, Fs)
     
     output = real(zeros(frames))
     output(1) = 1.0 !target
@@ -47,7 +47,7 @@ program main
     print *
 
     do i = 1, 10
-       write (*,*), i, output(i)
+       write (*,*), i, plog(i)
     end do
 
 end program

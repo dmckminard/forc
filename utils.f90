@@ -1,10 +1,13 @@
+! Various signal processing utility functions
+
 module utils
 
   implicit none
-  integer, parameter:: dp=kind(0.d0) ! double precision
+  integer, parameter :: dp=kind(0.d0) ! double precision
+  real(dp) :: pi = 4.d0*datan(1.d0)
   
   private
-  public dp, zeros, ones, logspace, linspace, postpad
+  public dp, zeros, ones, logspace, linspace, postpad, freqpoles
   
   contains
   
@@ -48,10 +51,9 @@ module utils
   
   ! postpad array with zeros
   subroutine postpad(a, n) 
-    
     real(dp), allocatable :: a(:), pad(:)
     integer, intent(in) :: n
-    integer :: a_size, i
+    integer :: a_size
     
     a_size = size(a)
     if(n <= a_size) return
@@ -64,5 +66,32 @@ module utils
     !call move_alloc(from=pad, to=a)    
      
   end subroutine postpad
+  
+  function freqpoles(fr, Fs) result(p)
+    
+    real(dp), intent(in) :: fr(:)
+    integer, intent(in) :: Fs
+    real(dp), allocatable :: wp(:), dwp(:)
+    complex*16, allocatable :: p(:)
+    integer pnum, k
+    
+    pnum = size(fr)
+    allocate(wp(pnum))
+    wp = 2*pi*fr/real(Fs) !discrete pole frequencies
+    dwp = zeros(pnum)
+    
+    do k = 2, pnum-1
+        dwp(k) = (wp(k+1)-wp(k-1))/2.d0
+    enddo
+    
+    dwp(1) = (wp(2)-wp(1))
+    dwp(pnum) = wp(pnum)-wp(pnum-1)
+    
+    ! computing poles from center frequency wp and bandwidth dwp
+    allocate(p(2*size(wp)))
+    p = exp(-dwp/2.d0)*exp(cmplx(0.d0,1)*wp)
+    p = [p, conjg(p)] !pole pairs one after the other
+    
+  end function freqpoles
 
 end module
